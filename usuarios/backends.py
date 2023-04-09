@@ -1,10 +1,10 @@
 import warnings
 
-from django.contrib.auth import get_user_model
 from django.db.models import Exists, OuterRef, Q
 from django.utils.deprecation import RemovedInDjango50Warning
 from django.utils.inspect import func_supports_parameter
 
+from . import get_user_model
 from permissoes.models import Permissao
 
 
@@ -36,12 +36,12 @@ class BaseBackend:
 
 class CustomBackend(BaseBackend):
     def _get_user_permissions(self, user_obj):
-        return user_obj.user_permissions.all()
+        return user_obj.permissoes.all()
 
     def _get_group_permissoes(self, user_obj):
-        usuario_perfis_campo = get_user_model()._meta.get_field("perfis")
-        usuario_perfis_consulta = "group__%s" % usuario_perfis_campo.related_query_name()
-        return Permissao.objects.filter(**{usuario_perfis_consulta: user_obj})
+        user_groups_field = get_user_model()._meta.get_field("perfis")
+        user_groups_query = "perfil__%s" % user_groups_field.related_query_name()
+        return Permissao.objects.filter(**{user_groups_query: user_obj})
 
     def _get_permissions(self, user_obj, obj, from_name):
         """

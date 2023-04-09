@@ -1,13 +1,15 @@
 import unicodedata
 
 from django import forms
-from django.contrib.auth import get_user_model, password_validation
+from django.contrib.auth.password_validation import validate_password, password_validators_help_text_html
 from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX, identify_hasher
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 
+from . import get_user_model
 from .models import Usuario
+
 
 UserModel = get_user_model()
 
@@ -75,7 +77,7 @@ class UserCreationForm(forms.ModelForm):
         label=_("Password"),
         strip=False,
         widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
-        help_text=password_validation.password_validators_help_text_html(),
+        help_text=password_validators_help_text_html(),
     )
     password2 = forms.CharField(
         label=_("Password confirmation"),
@@ -113,7 +115,7 @@ class UserCreationForm(forms.ModelForm):
         password = self.cleaned_data.get("password2")
         if password:
             try:
-                password_validation.validate_password(password, self.instance)
+                validate_password(password, self.instance)
             except ValidationError as error:
                 self.add_error("password2", error)
 
@@ -167,7 +169,7 @@ class AdminPasswordChangeForm(forms.Form):
             attrs={"autocomplete": "new-password", "autofocus": True}
         ),
         strip=False,
-        help_text=password_validation.password_validators_help_text_html(),
+        help_text=password_validators_help_text_html(),
     )
     password2 = forms.CharField(
         label=_("Password (again)"),
@@ -188,7 +190,7 @@ class AdminPasswordChangeForm(forms.Form):
                 self.error_messages["password_mismatch"],
                 code="password_mismatch",
             )
-        password_validation.validate_password(password2, self.user)
+        validate_password(password2, self.user)
         return password2
 
     def save(self, commit=True):

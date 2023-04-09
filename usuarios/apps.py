@@ -6,13 +6,13 @@ from django.utils.translation import gettext_lazy as _
 
 from itertools import chain
 from django.apps import apps
-from django.contrib.auth import get_user_model
 from django.contrib.auth.checks import check_user_model
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.management import create_contenttypes
 from django.apps import apps as global_apps
 from django.db import DEFAULT_DB_ALIAS, router
-from django.contrib.auth import get_permission_codename
+
+from . import get_user_model, get_permission_codename
 
 
 def check_models_permissions(app_configs=None, **kwargs):

@@ -1,10 +1,8 @@
 from django.apps import apps
-from django.contrib import auth
 from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-from django.contrib import auth
 from django.core.exceptions import PermissionDenied
 from django.utils.itercompat import is_iterable
 from django.core.mail import send_mail
@@ -13,6 +11,8 @@ from django.utils.translation import gettext_lazy as _
 from cidades.models import Cidade
 from permissoes.models import Permissao
 from perfis.models import Perfil
+
+from . import _get_backends, get_backends, load_backend
 
 
 def update_last_login(sender, user, **kwargs):
@@ -66,7 +66,7 @@ class UserManager(BaseUserManager):
         self, perm, is_active=True, include_superusers=True, backend=None, obj=None
     ):
         if backend is None:
-            backends = auth._get_backends(return_tuples=True)
+            backends = _get_backends(return_tuples=True)
             if len(backends) == 1:
                 backend, _ = backends[0]
             else:
@@ -79,7 +79,7 @@ class UserManager(BaseUserManager):
                 "backend must be a dotted import path string (got %r)." % backend
             )
         else:
-            backend = auth.load_backend(backend)
+            backend = load_backend(backend)
         if hasattr(backend, "with_perm"):
             return backend.with_perm(
                 perm,
@@ -93,7 +93,7 @@ class UserManager(BaseUserManager):
 def _user_get_permissions(user, obj, from_name):
     permissions = set()
     name = "get_%s_permissions" % from_name
-    for backend in auth.get_backends():
+    for backend in get_backends():
         if hasattr(backend, name):
             permissions.update(getattr(backend, name)(user, obj))
     return permissions
@@ -102,7 +102,7 @@ def _user_has_perm(user, perm, obj):
     """
     A backend can raise `PermissionDenied` to short-circuit permission checking.
     """
-    for backend in auth.get_backends():
+    for backend in get_backends():
         if not hasattr(backend, "has_perm"):
             continue
         try:
@@ -116,7 +116,7 @@ def _user_has_module_perms(user, app_label):
     """
     A backend can raise `PermissionDenied` to short-circuit permission checking.
     """
-    for backend in auth.get_backends():
+    for backend in get_backends():
         if not hasattr(backend, "has_module_perms"):
             continue
         try:
@@ -136,25 +136,25 @@ class PermissoesMixin(models.Model):
             "explicitly assigning them."
         ),
     )
-    gropus = models.ManyToManyField(
+    perfis = models.ManyToManyField(
         Perfil,
-        verbose_name="groups",
+        verbose_name="perfis de usuários",
         blank=True,
         help_text=_(
             "The profiles this user belongs to. A user will get all permissions "
             "granted to each of their profiles."
         ),
-        related_name="user_set",
-        related_query_name="user",
+        related_name="usuarios",
+        related_query_name="usuario",
         db_table="usuarios_perfis",
     )
-    user_permissions = models.ManyToManyField(
+    permissoes = models.ManyToManyField(
         Permissao,
         verbose_name="permissões de usuários",
         blank=True,
         help_text=_("Specific permissions for this user."),
-        related_name="user_set",
-        related_query_name="user",
+        related_name="usuarios",
+        related_query_name="usuario",
         db_table="usuarios_permissoes",
     )
 
