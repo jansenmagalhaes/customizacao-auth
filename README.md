@@ -1,4 +1,4 @@
-# Estudos sobre Possibilidade de Customização do Auth do Django
+# Estudo sobre Possibilidade de Customização do Auth do Django
 
 Criei um projeto simples com alguns models para tentar customizar o auth do Django.
 
